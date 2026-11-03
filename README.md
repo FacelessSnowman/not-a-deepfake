@@ -442,6 +442,37 @@ without the weights and features (`best.pt`, `last.pt`, `*.npy`).
 
 The runs it reads are listed in `RUNS` at the top of the script; add new runs there.
 
+### Backbone gaps and seeds
+
+Whether the differences between the backbones are larger than chance, in
+`src/analysis/backbones.py`. No GPU needed:
+
+```
+python -m src.analysis.backbones     # writes ~/data/analysis/backbones/
+```
+
+For each test set (FF++, Celeb-DF, DFDC, NeuralTextures seen and held out),
+clean and at call quality, it gives each backbone's video AUC with a 95%
+bootstrap interval, and the gap between every pair with a 95% paired bootstrap
+interval (videos resampled, real and fake separately; a gap whose interval
+excludes 0 is larger than the choice of test videos explains). It reads the
+held-out runs (`<run>_no-NeuralTextures`) and any extra seeds (`<run>_seed<n>`)
+next to each run in `RUNS`; with seeds, a backbone's AUC is the mean over them
+and the spread between seeds is reported too.
+
+Extra seeds, in tmux on the GPU machine (safe to rerun, like the baselines):
+
+```
+bash scripts/run_seeds.sh                                    # seeds 1 and 2, all four backbones
+BACKBONES="vit_b16 clip_vit_b16" bash scripts/run_seeds.sh   # only these
+HELD_OUT=1 bash scripts/run_seeds.sh                         # the NeuralTextures held-out runs
+```
+
+| Output | Contents |
+|---|---|
+| `backbone_auc.csv` | Video AUC per backbone and test set: per seed, mean, seed sd, 95% interval |
+| `backbone_pairs.csv` | AUC difference of every pair of backbones, 95% paired interval, `excludes_0` |
+
 ### Grad-CAM
 
 Heatmaps of which parts of a face crop drove each frame model's decision, in
